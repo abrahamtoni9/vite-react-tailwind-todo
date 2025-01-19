@@ -6,6 +6,15 @@ import TodoComputed from "./components/TodoComputed";
 import TodoFilter from "./components/TodoFilter";
 import { useEffect, useState } from "react";
 
+import { DragDropContext } from "@hello-pangea/dnd";
+
+const reorder = (list, startIndex, endIndex) => {
+  const result = [...list]; // Crea una copia de la lista original.
+  const [removed] = result.splice(startIndex, 1); // Remueve un elemento de la posición `startIndex` y lo guarda en `removed` desestructurado.
+  result.splice(endIndex, 0, removed); // Inserta el elemento removido en la posición `endIndex`.
+  return result; // Retorna la lista reordenada.
+};
+
 // const initialStateTodos = [
 //   { id: 1, title: "Buy milk", completed: true },
 //   { id: 2, title: "Complete online JS Blueweb curse", completed: false},
@@ -21,8 +30,22 @@ const App = () => {
   const [todos, setTodos] = useState(initialStateTodos);
 
   useEffect(() => {
-    localStorage.setItem("todos", JSON.stringify(todos));
-  }, [todos]);
+      localStorage.setItem("todos", JSON.stringify(todos));
+    }, [todos]);
+
+
+  const handleDragEnd = (result) => {
+
+    const { destination, source } = result;
+
+    if (!destination) return;
+
+    if ( source.index === destination.index && source.droppableId === destination.droppableId)return;
+
+    setTodos((prevTasks) => reorder(prevTasks, source.index, destination.index));
+    
+  };
+
 
   const createTodo = (title) => {
     const newTodo = {
@@ -69,8 +92,13 @@ const App = () => {
       <main className="container mx-auto px-4 mt-8 md:max-w-xl">
         
         <TodoCreate createTodo = { createTodo } />
-       
-        <TodoList todos= { filteredTodo() } updateTodo = { updateTodo } removeTodo = { removeTodo }/>
+
+        <DragDropContext onDragEnd={handleDragEnd}>
+
+          <TodoList todos= { filteredTodo() } updateTodo = { updateTodo } removeTodo = { removeTodo }/>
+          
+        </DragDropContext>
+        
 
         <TodoComputed computedItemList = {computedItemList} clearCompleted = {clearCompleted}/>
         
